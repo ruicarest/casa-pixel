@@ -971,20 +971,20 @@ export const SPRITES = {
       box(c, BLK, 0, 20, 9, 26); r(c, '#33303c', 1, 21.5, 7, 23); r(c, BLK2, 1, 21.5, 7, .5);
     },
   },
-  wardrobe_side: { // built-in white wardrobe along the left wall, floor to ceiling, seen from its end
-    w: 10, h: 58, front: 18, z3: 2, draw(c) {
-      box(c, KW, 0, 0, 10, 41); r(c, WHITE, 1, 1, 8, 38);
-      for (const y of [10.5, 20.5, 30.5]) r(c, KS, 8.5, y, .5, 9);     // door gaps along the room side
-      for (const y of [10, 20, 30]) r(c, KS, 1, y, 8, .5);
-      box(c, KW, 0, 40, 10, 18); r(c, WHITE, 1, 41.5, 8, 15); r(c, KS, 1, 41.5, 8, .5);
+  wardrobe_side: { // built-in white wardrobe, floor to ceiling, one tile deep, doors facing right (seen from its end)
+    w: 16, h: 48, front: 8, z3: 2, draw(c) {
+      box(c, KW, 0, 0, 16, 41); r(c, WHITE, 1, 1, 14, 38);
+      for (const y of [10, 20, 30]) r(c, KS, 1, y, 14, .5);
+      for (const y of [4, 14, 24, 34]) r(c, '#9aa0b0', 13.5, y, .5, 3);  // door handles along the room side
+      box(c, KW, 0, 40, 16, 8); r(c, WHITE, 1, 41.5, 14, 5);
     },
   },
   shower_glass_v: { // the walk-in shower, long side running front to back
-    w: 16, h: 28, flat: true, draw(c) {
-      box(c, '#dfe6ec', 0, 0, 16, 28); r(c, WHITE, 1.5, 1.5, 13, 25);
-      for (let y = 4; y < 26; y += 3) r(c, '#e9eef2', 3, y, 10, .5);
-      r(c, STEEL, 7, 13, 2, 2); r(c, '#8a8f9a', 7.5, 13.5, 1, 1);
-      r(c, 'rgba(150,200,225,.6)', 0, 0, 16, 1.5); r(c, 'rgba(150,200,225,.6)', 0, 0, 1.5, 28);
+    w: 22, h: 28, flat: true, draw(c) {
+      box(c, '#dfe6ec', 0, 0, 22, 28); r(c, WHITE, 1.5, 1.5, 19, 25);
+      for (let y = 4; y < 26; y += 3) r(c, '#e9eef2', 3, y, 16, .5);
+      r(c, STEEL, 10, 13, 2, 2); r(c, '#8a8f9a', 10.5, 13.5, 1, 1);
+      r(c, 'rgba(150,200,225,.6)', 0, 0, 22, 1.5); r(c, 'rgba(150,200,225,.6)', 0, 0, 1.5, 28);
     },
   },
 };
@@ -1187,14 +1187,56 @@ export function drawMap(c, map) {
       }
       if (!isWall(ch)) {
         if (isWall(at(tx, ty - 1))) r(c, 'rgba(0,0,0,.2)', x, y, T, 3);
-        if (at(tx - 1, ty) === ' ') r(c, 'rgba(0,0,0,.12)', x, y, 2, T);
-        if (at(tx + 1, ty) === ' ') r(c, 'rgba(255,235,200,.07)', x + 14, y, 2, T);
-        if (at(tx, ty - 1) === ' ' && at(tx, ty + 1) === ' ') { // doorway through a side wall
-          r(c, 'rgba(0,0,0,.3)', x, y, T, 4); r(c, WD, x, y + T - 1, T, 1);
-        }
         if (ch === 'v' && at(tx - 1, ty) === ' ') { // balcony railing
           r(c, STEEL, x, y, 2, T); r(c, '#8a8f9a', x + 2, y, 1, T); r(c, OUT, x, y, 3, 1);
         }
+      }
+    }
+  }
+
+  // Second pass — thin walls. A wall takes a whole tile in the map, but it is drawn as a 3-unit line through the
+  // middle of that tile; the rest of the tile continues whatever is next to it (floor, or the face of a back wall).
+  const OUTSIDE = '#15111b', LINE = '#2f2536';
+  const copy = (sx, sy, w, h, dx, dy) => c.drawImage(c.canvas, sx * S, sy * S, w * S, h * S, dx, dy, w, h);
+  const room = (x, y) => at(x, y) !== ' ';
+  const face = (x, y, w) => { r(c, '#d5d8de', x, y, w, 8); r(c, '#bfc3cb', x, y + 4, w, 1.5); r(c, WHITE, x, y + 5.5, w, 2.5); };
+  // v: wall running up-down between left and right; h: wall running left-right; corner: only joins other walls
+  const kind = (tx, ty) => {
+    if (!wallTop(tx, ty)) return null;
+    const L = room(tx - 1, ty), R = room(tx + 1, ty);
+    if (!L && at(tx + 1, ty) === 'v') return 'none'; // the balcony's outer edge is its railing
+    const U = room(tx, ty - 1), D = room(tx, ty + 1);
+    if (L && R) return 'v';
+    if (U && D && !isWall(at(tx, ty + 1))) return 'h'; // e.g. the end of the corridor, with the bathroom below it
+    if (L || R) return 'v';
+    if (U || D) return isWall(at(tx, ty + 1)) ? 'none' : 'h';
+    return 'corner';
+  };
+  const joins = k => k === 'h' || k === 'corner';
+  for (let ty = 0; ty < map.length; ty++) {
+    for (let tx = 0; tx < map[ty].length; tx++) {
+      const k = kind(tx, ty), x = tx * T, y = ty * T;
+      if (!k) continue;
+      r(c, OUTSIDE, x, y, T, T);
+      const below = room(tx, ty + 1) && !isWall(at(tx, ty + 1));
+      if (k === 'none') {
+        if (room(tx, ty - 1) && !isWall(at(tx, ty - 1))) copy(x, y - T, T, T, x, y);
+      } else if (k === 'v') {
+        // a side that has no room next to it but meets a left-right wall gets a short piece of that wall
+        const stub = (hx, w) => { copy(hx, y - 5, w, 5, hx, y); r(c, LINE, hx, y + 5, w, 3); if (below) face(hx, y + 8, w); };
+        if (room(tx - 1, ty)) copy(x - 6.5, y, 6.5, T, x, y); else if (joins(kind(tx - 1, ty))) stub(x, 6.5);
+        if (room(tx + 1, ty)) { copy(x + T, y, 6.5, T, x + 9.5, y); r(c, 'rgba(0,0,0,.16)', x + 9.5, y, 2, T); }
+        else if (joins(kind(tx + 1, ty))) stub(x + 9.5, 6.5);
+        r(c, LINE, x + 6.5, y, 3, T); r(c, '#4a3d52', x + 6.5, y, .5, T);
+      } else if (k === 'h') {
+        if (room(tx, ty - 1)) copy(x, y - 5, T, 5, x, y);
+        r(c, LINE, x, y + 5, T, 3); r(c, '#4a3d52', x, y + 5, T, .5);
+        if (below) face(x, y + 8, T);
+      } else {
+        if (joins(kind(tx + 1, ty))) r(c, LINE, x + 6.5, y + 5, 9.5, 3);
+        if (joins(kind(tx - 1, ty))) r(c, LINE, x, y + 5, 9.5, 3);
+        if (['v', 'corner'].includes(kind(tx, ty - 1))) r(c, LINE, x + 6.5, y, 3, 8);
+        if (['v', 'corner'].includes(kind(tx, ty + 1))) r(c, LINE, x + 6.5, y + 5, 3, 11);
       }
     }
   }

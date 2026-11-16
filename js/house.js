@@ -9,7 +9,7 @@
 
 // Bump when MAP or defaultObjects() change: saved furniture positions are then replaced by the new defaults
 // (plants and their watering history are kept when the page is synced with the cloud).
-export const LAYOUT = 13;
+export const LAYOUT = 14;
 
 export const MAP = [
   '                             ',
@@ -28,9 +28,9 @@ export const MAP = [
   ' vv ppppppppp ggg pp GGGGGGG ',
   ' vvpppppppppp LLL pp GGGGGGG ',
   ' vvpppppppppp LLLppppppppppp ',
-  ' vv ppppppppp gggg   ppppppp ',
-  ' vv ppppppppp gggggggppppppp ',
-  ' vv ppppppppp gggggggppppppp ',
+  ' vv ppppppppp gggg  pppppppp ',
+  ' vv ppppppppp ggggggpppppppp ',
+  ' vv ppppppppp ggggggpppppppp ',
   '                             ',
 ];
 
@@ -45,7 +45,7 @@ export const ROOMS = [
   { name: 'Sala', x: 3, y: 11, w: 10, h: 8 },
   { name: 'Casa de banho de serviço', x: 14, y: 11, w: 3, h: 3 },
   { name: 'Casa de banho', x: 14, y: 16, w: 3, h: 3 },
-  { name: 'Casa de banho', x: 17, y: 16, w: 4, h: 3 }, // the recess under the end of the corridor, where the shower is
+  { name: 'Casa de banho', x: 17, y: 16, w: 3, h: 3 }, // the recess under the end of the corridor, where the shower is
   { name: 'Closet', x: 20, y: 3, w: 8, h: 4 },
   { name: 'Closet', x: 20, y: 7, w: 3, h: 1 }, // the nook by its door, which cuts a corner out of the escritório
   { name: 'Escritório', x: 20, y: 9, w: 8, h: 4 },
@@ -108,28 +108,29 @@ export function defaultObjects() {
     // Casa de banho de serviço — basin on the left wall (its mirror hangs on that wall, which neither view shows), corner shower
     ['vanity_side', 14.03, 10.55], ['rug_peach', 15.6, 11.5], ['shower', 14, 13], ['toilet', 16, 12.6],
     // Casa de banho — basin and tower on the left wall; toilet, bin and basket along the cut-away front wall;
-    // the walk-in shower is in the recess at the bottom right (where the plan shows a bathtub); there is no wall
-    // thickness in the map between it and the quarto: the back of the quarto's built-in wardrobe is that wall
+    // the walk-in shower fills the niche under the end of the corridor (where the plan shows a bathtub); the back of
+    // the quarto's built-in wardrobe is the niche's right wall
     ['bath_tower', 14.05, 14.55], ['vanity_side', 14.03, 15.75],
     ['toilet', 14.15, 17.7], ['bin_steel', 15.3, 18.4], ['wicker_basket', 15.9, 18.2],
-    ['rug_navy', 16.9, 17.6], ['shower_glass_v', 19.97, 17.2],
+    ['rug_navy', 16.9, 17.6], ['shower_glass_v', 18.6, 17.2],
     // Closet — L-shaped: the door opens into a nook at the bottom-left; window on the right wall
-    ['window_side', 28, 3.5],
+    ['window_side', 28.2, 3.5],
     ['clothes_rack', 21, 1.4], ['dresser_white', 23.3, 1.3], ['dehumidifier', 24.8, 2.6], ['storage_box', 25.6, 2.9],
     ['armchair_black', 26.6, 2.3], ['ironing_board', 25.2, 3.9],
     ['desk', 25.5, 5.3], ['office_chair_black', 24.4, 5.5],
     // Escritório — door bottom-left, window on the right wall
-    ['window_side', 28, 9.5],
+    ['window_side', 28.2, 9.5],
     ['picture', 23.3, 7.5], ['picture', 24.6, 7.5], ['picture', 25.9, 7.5],
     ['ladder', 21, 9], ['dresser_dark', 21, 10.3],
     ['sign', 23, 8.5], ['whiteboard', 24, 8.5], ['mat_dark', 23, 9.5], ['stool', 23, 10.5],
     ['kallax_side', 27, 8.5], ['desk_side', 26.5, 11], ['office_chair', 25.5, 11.5],
     ['cabinet_dark', 24, 10.5],
     ['cat', 27.125, 9.5625], // asleep on its bed, on top of the low shelf
-    // Quarto — door top-left, built-in white wardrobe along the left wall below it, window on the right wall
-    ['window_side', 28, 15.5],
+    // Quarto — door top-left; the built-in white wardrobe fills column 20 below the door (it sits in the wall zone,
+    // between the quarto and the shower niche, as on the plan); window on the right wall
+    ['window_side', 28.2, 15.5],
     ['picture', 22.5, 13.5], ['heater', 21, 14.5], ['ladder', 26, 13.5], ['basket', 27, 14.5],
-    ['wardrobe_side', 21.03, 15.37], ['rug_grey', 22.1, 15.6], ['bed_sage', 23.5, 16],
+    ['wardrobe_side', 20, 16], ['rug_grey', 21.5, 15.5], ['bed_sage', 23.5, 16],
     ['nightstand', 22.5, 18], ['nightstand_lamp', 26, 18],
   ];
   return list.map(([type, x, y, extra], i) => ({

@@ -84,7 +84,8 @@ function freeTiles() { // floor tiles not under a piece of furniture
   for (const o of objects) {
     const s = SPRITES[o.type];
     if (s.flat || s.wall || s.top || o.type === 'cat') continue;
-    const bottom = o.y + s.h / T, top = Math.max(o.y, bottom - 1); // only its base blocks the way
+    // only its base blocks the way: one tile, or the real depth when the sprite says how much of it is front
+    const bottom = o.y + s.h / T, top = Math.max(o.y, bottom - (s.front ? (s.h - s.front) / T : 1));
     for (let y = Math.floor(top + .3); y <= Math.floor(bottom - .2); y++) {
       for (let x = Math.floor(o.x + .2); x <= Math.floor(o.x + s.w / T - .2); x++) if (free[y]?.[x]) free[y][x] = false;
     }

@@ -9,7 +9,7 @@
 
 // Bump when MAP or defaultObjects() change: saved furniture positions are then replaced by the new defaults
 // (plants and their watering history are kept when the page is synced with the cloud).
-export const LAYOUT = 12;
+export const LAYOUT = 13;
 
 export const MAP = [
   '                             ',
@@ -29,8 +29,8 @@ export const MAP = [
   ' vvpppppppppp LLL pp GGGGGGG ',
   ' vvpppppppppp LLLppppppppppp ',
   ' vv ppppppppp gggg   ppppppp ',
-  ' vv ppppppppp gggggg ppppppp ',
-  ' vv ppppppppp gggggg ppppppp ',
+  ' vv ppppppppp gggggggppppppp ',
+  ' vv ppppppppp gggggggppppppp ',
   '                             ',
 ];
 
@@ -45,7 +45,7 @@ export const ROOMS = [
   { name: 'Sala', x: 3, y: 11, w: 10, h: 8 },
   { name: 'Casa de banho de serviço', x: 14, y: 11, w: 3, h: 3 },
   { name: 'Casa de banho', x: 14, y: 16, w: 3, h: 3 },
-  { name: 'Casa de banho', x: 17, y: 16, w: 3, h: 3 }, // the recess under the end of the corridor, where the shower is
+  { name: 'Casa de banho', x: 17, y: 16, w: 4, h: 3 }, // the recess under the end of the corridor, where the shower is
   { name: 'Closet', x: 20, y: 3, w: 8, h: 4 },
   { name: 'Closet', x: 20, y: 7, w: 3, h: 1 }, // the nook by its door, which cuts a corner out of the escritório
   { name: 'Escritório', x: 20, y: 9, w: 8, h: 4 },
@@ -108,10 +108,11 @@ export function defaultObjects() {
     // Casa de banho de serviço — basin on the left wall (its mirror hangs on that wall, which neither view shows), corner shower
     ['vanity_side', 14.03, 10.55], ['rug_peach', 15.6, 11.5], ['shower', 14, 13], ['toilet', 16, 12.6],
     // Casa de banho — basin and tower on the left wall; toilet, bin and basket along the cut-away front wall;
-    // the walk-in shower is in the recess at the bottom right (where the plan shows a bathtub)
+    // the walk-in shower is in the recess at the bottom right (where the plan shows a bathtub); there is no wall
+    // thickness in the map between it and the quarto: the back of the quarto's built-in wardrobe is that wall
     ['bath_tower', 14.05, 14.55], ['vanity_side', 14.03, 15.75],
     ['toilet', 14.15, 17.7], ['bin_steel', 15.3, 18.4], ['wicker_basket', 15.9, 18.2],
-    ['rug_navy', 16.9, 17.6], ['shower_glass_v', 18.95, 17.2],
+    ['rug_navy', 16.9, 17.6], ['shower_glass_v', 19.97, 17.2],
     // Closet — L-shaped: the door opens into a nook at the bottom-left; window on the right wall
     ['window_side', 28, 3.5],
     ['clothes_rack', 21, 1.4], ['dresser_white', 23.3, 1.3], ['dehumidifier', 24.8, 2.6], ['storage_box', 25.6, 2.9],

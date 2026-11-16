@@ -71,10 +71,16 @@ export function createIso(canvas, bg) {
     for (const [x, y] of [[0, 0], [COLS, 0], [COLS, ROWS], [0, ROWS]]) g.lineTo(px(x, y), py(x, y, -.15));
     g.fill();
     for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) {
-      if (!isFloor(x, y)) continue;
+      // The 2D map spends two rows on every back wall and one column on every side wall. Here walls are thin
+      // planes, so that space is given back as floor: to the room behind (north), else to the room on the left.
+      let sx = x, sy = y;
+      if (!isFloor(x, y)) {
+        const up = [1, 2, 3].find(d => isFloor(x, y - d)), left = [1, 2].find(d => isFloor(x - d, y));
+        if (up) sy = y - up; else if (left) sx = x - left; else continue;
+      }
       g.save();
       g.transform(1, .5, -1, .5, px(x, y), py(x, y));
-      g.drawImage(bg, x * T * S, y * T * S, T * S, T * S, 0, 0, T + .3, T + .3);
+      g.drawImage(bg, sx * T * S, sy * T * S, T * S, T * S, 0, 0, T + .3, T + .3);
       g.restore();
     }
   }

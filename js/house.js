@@ -7,6 +7,10 @@
 //   back walls: G painted light grey   C small cream tiles   L large light-grey tiles
 //   (w wood boards, k checker and B brick still exist in the tile set but are no longer used)
 
+// Bump when MAP or defaultObjects() change: saved furniture positions are then replaced by the new defaults
+// (plants and their watering history are kept when the page is synced with the cloud).
+export const LAYOUT = 10;
+
 export const MAP = [
   '                             ',
   '                     GGGGGGG ',
@@ -69,7 +73,7 @@ export function defaultObjects() {
     // Cozinha — worktop on the back wall: fridge at the laundry end, free worktop left of the sink, oven at the far right
     ['k_upper', 5, 3.1], ['k_upper', 8, 3.1],
     ['fridge', 4, 3.5], ['k_cab', 5, 4], ['k_sink', 6, 4], ['k_dish', 7, 4], ['k_drawers', 8, 4], ['k_cab', 9, 4], ['k_oven', 10, 4],
-    ['runner_grey', 5, 6.1], ['runner_grey', 8, 6.5],
+    ['runner_grey', 5.4, 5.55], ['runner_grey', 8.2, 5.55],
     ['litter', 4.2, 8.3], ['bin_yellow', 5.6, 8.3], ['k_cart', 6.5, 7.25], ['bowls', 9.6, 8.4],
     // Entrada — front door at the top; the console stands against the cut-away front wall, by the sala door.
     // The kitchen door is at the bottom of the hall's left wall. The despensa is its own small room, top-right.

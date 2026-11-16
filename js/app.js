@@ -1,10 +1,8 @@
 import { T, S, SPRITES, spriteCanvas, drawMap, drawBubble, drawSelection } from './sprites.js';
-import { MAP, ROOMS, defaultObjects, fmtDate } from './house.js';
+import { MAP, ROOMS, LAYOUT, defaultObjects, fmtDate } from './house.js';
 import { weather, refreshWeather, currentEnv } from './env.js';
 import { getCode, setCode, takeCodeFromUrl, pull, push } from './sync.js';
 
-// Bump the version when the default layout changes, so old saved data is not reused.
-const LAYOUT = 9;
 const KEY = `casa-pixel:v${LAYOUT}`;
 const W = MAP[0].length * T, H = MAP.length * T; // logical ("art") size; drawn at S real pixels per unit
 
@@ -70,9 +68,87 @@ function roomOf(o) {
 }
 
 // ---------- drawing ----------
-const layer = o => (SPRITES[o.type].flat ? 0 : o.type === 'cat' || SPRITES[o.type].top ? 2 : 1); // `top`: sits on other furniture
-const drawOrder = () => [...objects].sort((a, b) =>
-  layer(a) - layer(b) || (a.y * T + SPRITES[a.type].h) - (b.y * T + SPRITES[b.type].h));
+// ---------- the cat ----------
+// She sleeps on her bed (the `cat` object's saved position), then wanders: walks to a random reachable floor
+// tile, sits for a while, and after a few stops goes back to bed. None of this is saved or synced.
+const FLOOR = 'pSgvtwk';
+const cat = { mode: 'sleep', x: 0, y: 0, path: [], until: 8000, dir: 1, stops: 0, last: 0 }; // x / y: her feet, in tiles
+const awake = o => o.type === 'cat' && cat.mode !== 'sleep';
+window.casaCat = cat; // handy in the console: casaCat.until = 0 wakes her up
+const rnd = (a, b) => a + Math.random() * (b - a);
+
+function freeTiles() { // floor tiles not under a piece of furniture
+  const free = MAP.map(row => [...row].map(ch => FLOOR.includes(ch)));
+  for (const o of objects) {
+    const s = SPRITES[o.type];
+    if (s.flat || s.wall || s.top || o.type === 'cat') continue;
+    const bottom = o.y + s.h / T, top = Math.max(o.y, bottom - 1); // only its base blocks the way
+    for (let y = Math.floor(top + .3); y <= Math.floor(bottom - .2); y++) {
+      for (let x = Math.floor(o.x + .2); x <= Math.floor(o.x + s.w / T - .2); x++) if (free[y]?.[x]) free[y][x] = false;
+    }
+  }
+  return free;
+}
+// Breadth-first search from (sx, sy); returns the tiles it can reach, each with the tile it was reached from.
+function reach(free, sx, sy) {
+  const from = new Map([[`${sx},${sy}`, null]]), queue = [[sx, sy]];
+  for (let i = 0; i < queue.length; i++) {
+    const [x, y] = queue[i];
+    for (const [nx, ny] of [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]]) {
+      if (free[ny]?.[nx] && !from.has(`${nx},${ny}`)) { from.set(`${nx},${ny}`, [x, y]); queue.push([nx, ny]); }
+    }
+  }
+  return { from, tiles: queue };
+}
+const feet = ([x, y]) => [x + .5, y + .75];
+function planWalk(home) {
+  const bed = objects.find(o => o.type === 'cat');
+  if (!bed) return false;
+  const free = freeTiles();
+  const bx = bed.x + .4, by = bed.y + .6;
+  // where she is now: her own tile, or the free tile nearest to the bed when she is just getting up
+  let sx = Math.floor(cat.x), sy = Math.floor(cat.y);
+  let doorstep = null, best = 1e9;
+  for (let y = 0; y < free.length; y++) for (let x = 0; x < free[y].length; x++) {
+    const d = Math.hypot(x + .5 - bx, y + .5 - by);
+    if (free[y][x] && d < best) { best = d; doorstep = [x, y]; }
+  }
+  if (!doorstep) return false;
+  if (cat.mode === 'sleep' || !free[sy]?.[sx]) { [sx, sy] = doorstep; if (cat.mode === 'sleep') { cat.x = bx; cat.y = by; } }
+  const { from, tiles } = reach(free, sx, sy);
+  const goal = home ? doorstep : tiles[Math.floor(Math.random() * tiles.length)];
+  if (!from.has(`${goal[0]},${goal[1]}`)) return false;
+  const path = [];
+  for (let p = goal; p; p = from.get(`${p[0]},${p[1]}`)) path.unshift(feet(p));
+  if (home) path.push([bx, by]);
+  cat.path = path; cat.mode = home ? 'home' : 'walk';
+  return true;
+}
+function updateCat(t) {
+  const dt = Math.min(100, t - cat.last) / 1000; cat.last = t;
+  if (editMode) return;
+  if (cat.mode === 'sleep' || cat.mode === 'sit') {
+    if (t < cat.until) return;
+    const home = cat.mode === 'sit' && cat.stops >= 3;
+    if (!planWalk(home)) cat.until = t + 5000;
+    return;
+  }
+  let step = 1.7 * dt; // tiles per second
+  while (step > 0 && cat.path.length) {
+    const [tx, ty] = cat.path[0], d = Math.hypot(tx - cat.x, ty - cat.y);
+    if (Math.abs(tx - cat.x) > .01) cat.dir = tx > cat.x ? 1 : -1;
+    if (d <= step) { cat.x = tx; cat.y = ty; cat.path.shift(); step -= d; }
+    else { cat.x += (tx - cat.x) / d * step; cat.y += (ty - cat.y) / d * step; step = 0; }
+  }
+  if (cat.path.length) return;
+  if (cat.mode === 'home') { cat.mode = 'sleep'; cat.stops = 0; cat.until = t + rnd(30000, 70000); }
+  else { cat.mode = 'sit'; cat.stops++; cat.until = t + rnd(4000, 12000); }
+}
+
+// ---------- drawing ----------
+const layer = o => (SPRITES[o.type].flat ? 0 : (o.type === 'cat' && !awake(o)) || SPRITES[o.type].top ? 2 : 1); // `top`: sits on other furniture
+const base = o => (awake(o) ? cat.y * T : o.y * T + SPRITES[o.type].h);
+const drawOrder = () => [...objects].sort((a, b) => layer(a) - layer(b) || base(a) - base(b));
 
 const hash = n => (n * 73 + 17) % 97;
 const idPhase = id => [...id].reduce((a, ch) => a + ch.charCodeAt(0), 0);
@@ -113,6 +189,17 @@ function render(t = performance.now()) {
 
   // furniture, plants, cat
   for (const o of order) {
+    if (awake(o)) { // the cat, out of bed
+      const type = cat.mode === 'sit' ? 'cat_sit' : 'cat_walk', cs = SPRITES[type];
+      const cv = spriteCanvas(type, false, Math.floor(t / (cat.mode === 'sit' ? 900 : 140)) % 2);
+      const cx = Math.round(cat.x * T * 2) / 2, cy = Math.round(cat.y * T * 2) / 2;
+      ctx.fillStyle = 'rgba(20,10,30,.28)';
+      ctx.fillRect(cx - cs.w / 2 + 1, cy - 1.5, cs.w - 2, 2.5);
+      ctx.save(); ctx.translate(cx, cy - cs.h); ctx.scale(cat.dir, 1);
+      ctx.drawImage(cv, -cs.w / 2, 0, cs.w, cs.h);
+      ctx.restore();
+      continue;
+    }
     const s = SPRITES[o.type], [x, y] = pos(o);
     const count = plantsOf(o).length;
     const dry = count > 0 && thirstyIn(o) * 2 >= count;
@@ -577,7 +664,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) pull
 window.addEventListener('resize', fit);
 let last = 0;
 function loop(t) {
-  if (t - last > 30 && !(gesture && gesture.type !== 'tap')) { last = t; render(t); }
+  if (t - last > 30 && !(gesture && gesture.type !== 'tap')) { last = t; updateCat(t); render(t); }
   requestAnimationFrame(loop);
 }
 setEdit(false); fit(); refresh(); showWeather();

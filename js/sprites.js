@@ -931,6 +931,30 @@ export const SPRITES = {
       box(c, RED, 0, 2, 10, 7); r(c, '#d9736a', 1.5, 3.5, 4, 1); r(c, BLK, 2, 7.5, 2, 1.5); r(c, BLK, 6, 7.5, 2, 1.5);
     },
   },
+  cat_walk: { // side view, facing right; the page mirrors it when she walks left
+    w: 15, h: 10, frames: 2, draw(c, _dry, _w, _h, frame) {
+      const GREY = '#7a746e', DK = '#55504b';
+      // tabby tail, held up
+      r(c, OUT, 0, 1, 2.5, 5.5); r(c, GREY, .5, 1.5, 1.5, 4.5); r(c, DK, .5, 2.5, 1.5, .5); r(c, DK, .5, 4, 1.5, .5);
+      // legs: two poses
+      for (const x of frame ? [2.5, 5, 8, 10.5] : [3, 4.5, 8.5, 10]) { r(c, OUT, x - .5, 7, 2, 3); r(c, WHITE, x, 7, 1, 2.5); }
+      box(c, WHITE, 1.5, 3.5, 10.5, 4.5); r(c, '#dfe3ea', 3, 7, 7, .5);
+      // head
+      box(c, WHITE, 9.5, 1, 5.5, 5); r(c, OUT, 10, 0, 1.5, 1.5); r(c, OUT, 13, 0, 1.5, 1.5);
+      r(c, WHITE, 10.5, .5, .5, .5); r(c, WHITE, 13.5, .5, .5, .5);
+      r(c, GREY, 11.5, 1.5, 1.5, 1); r(c, OUT, 13, 3, .5, 1); r(c, '#f0a5b0', 14, 4, .5, .5);
+    },
+  },
+  cat_sit: { // sitting, looking at you
+    w: 9, h: 11, frames: 2, draw(c, _dry, _w, _h, frame) {
+      const GREY = '#7a746e', DK = '#55504b';
+      r(c, OUT, 7, frame ? 7 : 8, 2, 3); r(c, GREY, 7.5, frame ? 7.5 : 8.5, 1, 2); r(c, DK, 7.5, 9, 1, .5);
+      box(c, WHITE, 1, 4.5, 6.5, 6.5); r(c, '#dfe3ea', 2, 9.5, 4.5, .5); r(c, OUT, 3.5, 8, .5, 2.5);
+      box(c, WHITE, .5, 1, 7, 5); r(c, OUT, 1, 0, 1.5, 1.5); r(c, OUT, 5.5, 0, 1.5, 1.5);
+      r(c, WHITE, 1.5, .5, .5, .5); r(c, WHITE, 6, .5, .5, .5);
+      r(c, GREY, 3, 1.5, 2, 1); r(c, OUT, 2.5, 3, .5, 1); r(c, OUT, 5, 3, .5, 1); r(c, '#f0a5b0', 3.75, 4.25, .5, .5);
+    },
+  },
 };
 
 export const S = 2; // real pixels per art unit: sprites can use half-unit detail

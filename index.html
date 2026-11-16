@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Casa Pixel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Casa Pixel</h1>
+      <p id="summary"></p>
+    </div>
+    <div class="actions">
+      <button type="button" id="add">+ Planta</button>
+      <button type="button" id="add-group">+ Grupo</button>
+      <button type="button" id="edit" aria-pressed="false">Mover objetos</button>
+      <button type="button" id="sync">Nuvem: desligada</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="stage">
+      <div class="viewport">
+        <canvas id="house" aria-label="Planta da casa em pixel art"></canvas>
+        <div class="zoom">
+          <button type="button" id="z-out" aria-label="Afastar">−</button>
+          <button type="button" id="z-reset" aria-label="Repor zoom"><span id="z-level">100%</span></button>
+          <button type="button" id="z-in" aria-label="Aproximar">+</button>
+        </div>
+      </div>
+      <p id="hint" class="muted"></p>
+      <div class="ambient">
+        <span id="weather" class="muted"></span>
+        <label>Hora
+          <select id="ov-time">
+            <option value="auto">Agora</option>
+            <option value="morning">Manhã</option>
+            <option value="afternoon">Tarde</option>
+            <option value="sunset">Pôr do sol</option>
+            <option value="night">Noite</option>
+          </select>
+        </label>
+        <label>Tempo
+          <select id="ov-sky">
+            <option value="auto">Real</option>
+            <option value="clear">Limpo</option>
+            <option value="cloudy">Nublado</option>
+            <option value="rain">Chuva</option>
+            <option value="storm">Trovoada</option>
+            <option value="snow">Neve</option>
+            <option value="fog">Nevoeiro</option>
+          </select>
+        </label>
+      </div>
+    </section>
+    <aside>
+      <h2>Plantas</h2>
+      <ul id="plants"></ul>
+      <div id="detail"></div>
+    </aside>
+  </main>
+
+  <dialog id="dlg">
+    <form>
+      <h2 id="dlg-title">Nova planta</h2>
+      <label>Nome <input id="new-name" required maxlength="40"></label>
+      <label id="l-species">Espécie <input id="new-species" maxlength="60"></label>
+      <label id="l-type">Desenho <select id="new-type"></select></label>
+      <label id="l-interval">Regar a cada (dias) <input id="new-interval" type="number" min="1" max="365" value="7"></label>
+      <div class="actions">
+        <button type="button" id="cancel">Cancelar</button>
+        <button type="submit" class="primary">Adicionar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

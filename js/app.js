@@ -4,7 +4,8 @@ import { weather, refreshWeather, currentEnv } from './env.js';
 import { getCode, setCode, takeCodeFromUrl, pull, push } from './sync.js';
 
 // Bump the version when the default layout changes, so old saved data is not reused.
-const KEY = 'casa-pixel:v7';
+const LAYOUT = 9;
+const KEY = `casa-pixel:v${LAYOUT}`;
 const W = MAP[0].length * T, H = MAP.length * T; // logical ("art") size; drawn at S real pixels per unit
 
 const $ = id => document.getElementById(id);
@@ -526,7 +527,7 @@ async function pushNow() {
   cloud.busy = true; cloud.dirty = false;
   try {
     // `room` is stored so that Siri can water "a sala" without knowing the map
-    const at = await push(cloud.code, objects.map(o => ({ ...o, room: roomOf(o) })));
+    const at = await push(cloud.code, [...objects.map(o => ({ ...o, room: roomOf(o) })), { id: '_meta', type: '_meta', layout: LAYOUT }]);
     if (at) { cloud.at = at; showCloud('Nuvem: ligada', 'ok'); } else showCloud('Nuvem: código inválido', 'err');
   } catch { cloud.dirty = true; showCloud('Nuvem: sem ligação', 'err'); }
   cloud.busy = false;
@@ -541,9 +542,17 @@ async function pullNow() {
     else if (!remote.objects.length) { cloud.busy = false; return pushNow(); } // first device: upload this house
     else {
       if (remote.at !== cloud.at && !cloud.dirty) {
-        objects = remote.objects.filter(o => SPRITES[o.type]);
+        const theirs = remote.objects.filter(o => SPRITES[o.type]);
+        const stale = (remote.objects.find(o => o.id === '_meta')?.layout || 0) < LAYOUT;
+        // The cloud copy was saved with an older house layout: keep its plants, take the furniture from this version.
+        if (stale) {
+          const furniture = defaultObjects().filter(o => !o.plant && !isGroup(o));
+          const taken = new Set(furniture.map(o => o.id));
+          objects = [...furniture, ...theirs.filter(o => o.plant || isGroup(o)).map(o => (taken.has(o.id) ? { ...o, id: `c${o.id}` } : o))];
+        } else objects = theirs;
         if (!objects.some(o => o.id === sel.obj)) sel = { obj: null, plant: null };
         cloud.at = remote.at; saveLocal(); refresh();
+        if (stale) queuePush();
       }
       showCloud('Nuvem: ligada', 'ok');
     }

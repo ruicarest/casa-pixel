@@ -916,6 +916,21 @@ export const SPRITES = {
       box(c, '#7a5540', 1, 15, 7, 6); r(c, '#96705a', 2, 16, 5, .5);
     },
   },
+  pantry_shelves: { // the despensa's back wall: shelves of groceries, the step ladder, coats on the door side
+    w: 30, h: 34, wall: true, draw(c) {
+      for (const y of [8, 16, 24]) { r(c, OUT, 0, y - .5, 19, 2.5); r(c, WL, .5, y, 18, 1.5); }
+      r(c, '#5fa8d3', 1, 3, 3, 5); r(c, RED, 5, 4, 3, 4); r(c, GOLD, 9, 3, 3, 5); r(c, WHITE, 13, 4, 4, 4);
+      r(c, WHITE, 1, 12, 5, 4); r(c, GM, 8, 11, 3, 5); r(c, '#e8c53a', 13, 12, 3, 4);
+      r(c, '#8a6a45', 2, 19, 5, 5); r(c, '#c9605a', 9, 20, 4, 4); r(c, '#3f6f9f', 14, 19, 3, 5);
+      r(c, STEEL, 21, 8, 1, 26); r(c, STEEL, 27, 8, 1, 26); for (let y = 12; y < 33; y += 5) r(c, STEEL, 21, y, 7, 1);
+    },
+  },
+  vacuum: {
+    w: 12, h: 9, draw(c) {
+      r(c, '#55506a', 9, 0, 1, 6); r(c, '#55506a', 9, 0, 3, 1);
+      box(c, RED, 0, 2, 10, 7); r(c, '#d9736a', 1.5, 3.5, 4, 1); r(c, BLK, 2, 7.5, 2, 1.5); r(c, BLK, 6, 7.5, 2, 1.5);
+    },
+  },
 };
 
 export const S = 2; // real pixels per art unit: sprites can use half-unit detail

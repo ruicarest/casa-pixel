@@ -1,10 +1,10 @@
 // Time of day + live weather (Open-Meteo: free, public, no API key).
 // The location is deliberately city-level (Porto), not the home address.
-const PLACE = { name: 'Porto', lat: 41.15, lon: -8.61 };
+const PLACE = { name: 'Porto', lat: 41.15, lon: -8.61, tz: 'Europe/Lisbon' };
 const API = 'https://api.open-meteo.com/v1/forecast'
   + `?latitude=${PLACE.lat}&longitude=${PLACE.lon}`
   + '&current=temperature_2m,weather_code,cloud_cover,wind_speed_10m'
-  + '&daily=sunrise,sunset&timezone=auto&forecast_days=1';
+  + `&daily=sunrise,sunset&timezone=${encodeURIComponent(PLACE.tz)}&forecast_days=1`;
 const CACHE = 'casa-pixel:weather';
 
 // WMO weather codes -> [label, kind, intensity]
@@ -54,6 +54,13 @@ export async function refreshWeather() {
   return weather;
 }
 
+// Minutes since midnight at the house, whatever timezone the device showing the page is set to.
+const clock = new Intl.DateTimeFormat('en-GB', { timeZone: PLACE.tz, hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' });
+function localMinutes() {
+  const [h, mi, sec] = clock.format(new Date()).split(':').map(Number);
+  return h * 60 + mi + sec / 60;
+}
+
 const clamp = v => Math.max(0, Math.min(1, v));
 const FIXED_TIME = { morning: 10 * 60, afternoon: 15 * 60, night: 23 * 60 };
 const FIXED_SKY = {
@@ -64,8 +71,7 @@ const FIXED_SKY = {
 // override.time: auto | morning | afternoon | sunset | night
 // override.sky:  auto | clear | cloudy | rain | storm | snow | fog
 export function currentEnv(override = {}) {
-  const now = new Date();
-  let m = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+  let m = localMinutes();
   if (override.time === 'sunset') m = weather.sunset - 5;
   else if (FIXED_TIME[override.time] != null) m = FIXED_TIME[override.time];
 

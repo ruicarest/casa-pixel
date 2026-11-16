@@ -9,7 +9,7 @@
 
 // Bump when MAP or defaultObjects() change: saved furniture positions are then replaced by the new defaults
 // (plants and their watering history are kept when the page is synced with the cloud).
-export const LAYOUT = 10;
+export const LAYOUT = 11;
 
 export const MAP = [
   '                             ',
@@ -29,8 +29,8 @@ export const MAP = [
   ' vvpppppppppp LLL pp GGGGGGG ',
   ' vvpppppppppp LLL pppppppppp ',
   ' vv ppppppppp ggggpp ppppppp ',
-  ' vv ppppppppp ggg    ppppppp ',
-  ' vv ppppppppp ggg    ppppppp ',
+  ' vv ppppppppp gggg   ppppppp ',
+  ' vv ppppppppp gggggg ppppppp ',
   '                             ',
 ];
 
@@ -45,6 +45,7 @@ export const ROOMS = [
   { name: 'Sala', x: 3, y: 11, w: 10, h: 8 },
   { name: 'Casa de banho de serviço', x: 14, y: 11, w: 3, h: 3 },
   { name: 'Casa de banho', x: 14, y: 16, w: 3, h: 3 },
+  { name: 'Casa de banho', x: 17, y: 17, w: 3, h: 2 }, // the recess under the end of the corridor, where the shower is
   { name: 'Closet', x: 20, y: 3, w: 8, h: 4 },
   { name: 'Closet', x: 20, y: 7, w: 3, h: 1 }, // the nook by its door, which cuts a corner out of the escritório
   { name: 'Escritório', x: 20, y: 9, w: 8, h: 4 },
@@ -93,7 +94,7 @@ export function defaultObjects() {
     ['rug_shag', 5.5, 14.5],
     ['dining_table', 10.6, 13.3], ['calathea', 11, 13.15, plant('Maranta riscada', 'Ctenanthe burle-marxii', 5, 0)],
     ['chair_dark', 11.15, 12.5], ['chair_dark_b', 11.15, 15], ['chair_dark_l', 9.95, 13.7], ['chair_dark_r', 12.25, 13.7],
-    ['cabinet_black', 4.1, 17.2], ['beanbag', 4.4, 16.3],
+    ['cabinet_black_side', 4.03, 16.1], ['beanbag', 5, 16.7],
     ['tv_south', 5.8, 17.55], ['zz', 8.1, 16.7, plant('Zamioculca', 'Zamioculcas zamiifolia', 21, 0)],
     ['console_glass', 9.2, 17.85], ['floor_lamp', 10.8, 16.8],
     ['fatsia', 11.65, 17.3, plant('Fátsia', 'Fatsia japonica', 5, 0)],
@@ -104,12 +105,13 @@ export function defaultObjects() {
     ])],
     ['rail_planter', 1.05, 13.4, plant('Floreira do corrimão', 'Espada-de-são-jorge e sedum', 14, 0)],
     ['bistro_set', 1.06, 16],
-    // Casa de banho de serviço (corner shower)
-    ['mirror', 14.3, 9.1], ['vanity', 14, 9.9], ['rug_peach', 15.8, 11.3], ['shower', 14, 13], ['toilet', 16, 12.6],
-    // Casa de banho (walk-in shower)
-    ['mirror', 14.4, 14.1], ['vanity', 14, 14.9], ['bath_tower', 15.7, 14.5],
-    ['toilet', 14, 16.6], ['rug_navy', 15.6, 16.7], ['bin_steel', 15.1, 17.4],
-    ['wicker_basket', 14.05, 18.1], ['shower_glass', 15.2, 18],
+    // Casa de banho de serviço — basin on the left wall (its mirror hangs on that wall, which neither view shows), corner shower
+    ['vanity_side', 14.03, 10.55], ['rug_peach', 15.6, 11.5], ['shower', 14, 13], ['toilet', 16, 12.6],
+    // Casa de banho — basin and tower on the left wall; toilet, bin and basket along the cut-away front wall;
+    // the walk-in shower is in the recess at the bottom right (where the plan shows a bathtub)
+    ['bath_tower', 14.05, 14.55], ['vanity_side', 14.03, 15.75],
+    ['toilet', 14.15, 17.7], ['bin_steel', 15.3, 18.4], ['wicker_basket', 15.9, 18.2],
+    ['rug_navy', 16.8, 17.25], ['shower_glass', 17.9, 18],
     // Closet — L-shaped: the door opens into a nook at the bottom-left; window on the right wall
     ['window_side', 28, 3.5],
     ['clothes_rack', 21, 1.4], ['dresser_white', 23.3, 1.3], ['dehumidifier', 24.8, 2.6], ['storage_box', 25.6, 2.9],

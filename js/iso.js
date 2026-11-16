@@ -3,7 +3,8 @@
 //
 // How a flat sprite becomes a volume: every sprite is a 3/4 drawing, i.e. its upper part is the top of the thing and
 // its lower part is the front. Solid sprites are split there and each part is sheared onto the matching face of a box.
-// Sprites with a lot of see-through (plants, chairs, lamps, the cat) stand upright as billboards instead.
+// See-through furniture (tables, chairs, lamps) becomes a cut-out standing parallel to the back wall;
+// plants and the cat stand upright facing you.
 import { T, S, SPRITES, spriteCanvas, drawBubble, drawSelection } from './sprites.js';
 import { MAP } from './house.js';
 
@@ -33,10 +34,12 @@ function spriteInfo(type) {
   for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 200) { n++; r += d[i]; g += d[i + 1]; b += d[i + 2]; }
   const fill = n / (d.length / 4);
   const tall = s.h >= s.w * 1.4;
-  const front = tall ? s.h - Math.min(8, s.h * .25) : Math.min(14, s.h * .55); // art units of the sprite that are its front
+  // art units of the sprite that are its front face (a sprite can say so itself with `front`)
+  const front = s.front ?? (tall ? s.h - Math.min(8, s.h * .25) : Math.min(14, s.h * .55));
   const it = {
-    solid: fill > .72 && !s.plant && !s.group,
+    solid: fill > .72 && !s.plant && !s.group && !s.stand,
     front, top: s.h - front,
+    mid: n ? `rgb(${Math.round(r / n * .85)},${Math.round(g / n * .85)},${Math.round(b / n * .88)})` : '#444',
     side: n ? `rgb(${Math.round(r / n * .62)},${Math.round(g / n * .62)},${Math.round(b / n * .66)})` : '#333',
   };
   info.set(type, it);
@@ -52,14 +55,16 @@ function wallFoot(cx, row) {
 export function createIso(canvas, bg) {
   const ctx = canvas.getContext('2d');
   let k = 1;
+  const view = { z: 1, ox: 0, oy: 0 }; // zoom and the logical point at the top-left corner
+  const FQ = 2;                         // the floor is cached at twice the base resolution so it survives zooming
   const ground2d = document.createElement('canvas'); // the floor, drawn once
   let boxes = [];                                    // screen boxes of the objects, in draw order (for picking)
 
   function buildFloor() {
-    ground2d.width = Math.round(ISO_W * k); ground2d.height = Math.round(ISO_H * k);
+    ground2d.width = Math.round(ISO_W * k * FQ); ground2d.height = Math.round(ISO_H * k * FQ);
     const g = ground2d.getContext('2d');
     g.imageSmoothingEnabled = false;
-    g.setTransform(k, 0, 0, k, 0, 0);
+    g.setTransform(k * FQ, 0, 0, k * FQ, 0, 0);
     // slab under the whole flat
     g.fillStyle = '#2a2030';
     g.beginPath();
@@ -150,7 +155,22 @@ export function createIso(canvas, bg) {
       };
     }
     const it = spriteInfo(o.type);
-    if (!it.solid) { // upright billboard, standing on its base
+    if (!it.solid && !s.plant && !s.group && o.type !== 'cat') {
+      // see-through furniture (tables, chairs, racks): a flat cut-out standing parallel to the back wall
+      const yc = yb - Math.min(.5, h / 2), x0 = px(o.x, yc), y0 = py(o.x, yc, h);
+      return {
+        key: o.x + w / 2 + yc + (s.top ? 1.5 : 0),
+        box: [x0, y0, s.w, s.h + s.w / 2],
+        draw() {
+          ctx.fillStyle = 'rgba(20,10,30,.22)'; ctx.beginPath();
+          for (const [x, y] of [[o.x, yc], [o.x + w, yc], [o.x + w + .25, yc + .35], [o.x + .25, yc + .35]]) ctx.lineTo(px(x, y), py(x, y));
+          ctx.fill();
+          ctx.save(); ctx.transform(1, .5, 0, 1, x0, y0);
+          ctx.drawImage(cv, 0, 0, s.w, s.h); ctx.restore();
+        },
+      };
+    }
+    if (!it.solid) { // plants and the cat: upright billboard, standing on its base
       const cx = o.x + w / 2, cy = yb - .3, z = s.top ? .85 : o.type === 'cat' ? .95 : 0;
       const bx = px(cx, cy) - s.w / 2, by = py(cx, cy, z) - s.h + 2;
       return {
@@ -177,6 +197,13 @@ export function createIso(canvas, bg) {
         ctx.drawImage(cv, 0, 0, s.w * S, it.top * S, 0, 0, s.w, it.top); ctx.restore();
         ctx.save(); ctx.transform(1, .5, 0, 1, px(o.x, yb), py(o.x, yb, zf));
         ctx.drawImage(cv, 0, it.top * S, s.w * S, it.front * S, 0, 0, s.w, it.front); ctx.restore();
+        if (s.back) { // sofas: the first `back` rows of the sprite are a backrest that rises above the seat
+          const bd = s.back / T * .6, zb = zf + .6;
+          quad(it.side, [x1, y0, zb], [x1, y0 + bd, zb], [x1, y0 + bd, 0], [x1, y0, 0]);
+          quad(it.mid, [o.x, y0 + bd, zb], [x1, y0 + bd, zb], [x1, y0 + bd, zf], [o.x, y0 + bd, zf]);
+          ctx.save(); ctx.transform(1, .5, -1, .5, px(o.x, y0), py(o.x, y0, zb));
+          ctx.drawImage(cv, 0, 0, s.w * S, s.back * S, 0, 0, s.w, bd * T); ctx.restore();
+        }
       },
     };
   }
@@ -186,8 +213,9 @@ export function createIso(canvas, bg) {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.fillStyle = '#15111b'; ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(ground2d, 0, 0);
-    ctx.setTransform(k, 0, 0, k, 0, 0);
+    const sc = k * view.z;
+    ctx.setTransform(sc, 0, 0, sc, -Math.round(view.ox * sc), -Math.round(view.oy * sc));
+    ctx.drawImage(ground2d, 0, 0, ISO_W, ISO_H);
 
     const items = walls.map(w => ({ key: w.key, draw: () => drawWall(w) }));
     boxes = [];
@@ -216,7 +244,7 @@ export function createIso(canvas, bg) {
     // light: the same washes as the top-down view, only over what has been painted
     const e = st.env, dark = 1 - e.day;
     ctx.globalCompositeOperation = 'source-atop';
-    const wash = (c, a) => { if (a > .01) { ctx.fillStyle = `rgba(${c},${a})`; ctx.fillRect(0, 0, ISO_W, ISO_H); } };
+    const wash = (c, a) => { if (a > .01) { ctx.fillStyle = `rgba(${c},${a})`; ctx.fillRect(0, 0, ISO_W, ISO_H); } }; // logical coords: covers the house at any zoom
     wash('120,125,140', .16 * e.cloud * e.day); wash('255,150,60', .16 * e.golden); wash('14,18,58', .6 * dark);
     ctx.globalCompositeOperation = 'lighter';
     if (e.day < .6) for (const b of boxes) {
@@ -237,8 +265,7 @@ export function createIso(canvas, bg) {
 
   // Topmost object under a pointer event; `any` also returns furniture (used while moving things).
   function pick(ev, any, plantsOf) {
-    const r = canvas.getBoundingClientRect();
-    const x = (ev.clientX - r.left) / r.width * ISO_W, y = (ev.clientY - r.top) / r.height * ISO_H;
+    const [x, y] = logical(ev);
     for (let i = boxes.length - 1; i >= 0; i--) {
       const [bx, by, bw, bh] = boxes[i].box, o = boxes[i].o;
       if (x >= bx - 2 && x <= bx + bw + 2 && y >= by - 2 && y <= by + bh + 2 && (any || plantsOf(o).length || Array.isArray(o.plants))) return o;
@@ -247,9 +274,25 @@ export function createIso(canvas, bg) {
   }
   // Where on the floor a pointer event is, in tiles.
   function floorAt(ev) {
-    const r = canvas.getBoundingClientRect();
-    return ground((ev.clientX - r.left) / r.width * ISO_W, (ev.clientY - r.top) / r.height * ISO_H);
+    return ground(...logical(ev));
   }
+  function logical(ev) {
+    const r = canvas.getBoundingClientRect();
+    return [view.ox + (ev.clientX - r.left) / r.width * ISO_W / view.z, view.oy + (ev.clientY - r.top) / r.height * ISO_H / view.z];
+  }
+  function clamp() {
+    view.z = Math.min(8, Math.max(1, view.z));
+    view.ox = Math.min(ISO_W - ISO_W / view.z, Math.max(0, view.ox));
+    view.oy = Math.min(ISO_H - ISO_H / view.z, Math.max(0, view.oy));
+  }
+  // Zoom keeping the point under (fx, fy) — fractions of the canvas — where it is.
+  function zoomAt(fx, fy, factor) {
+    const lx = view.ox + fx * ISO_W / view.z, ly = view.oy + fy * ISO_H / view.z;
+    view.z *= factor; clamp();
+    view.ox = lx - fx * ISO_W / view.z; view.oy = ly - fy * ISO_H / view.z; clamp();
+  }
+  function panBy(dfx, dfy) { view.ox -= dfx * ISO_W / view.z; view.oy -= dfy * ISO_H / view.z; clamp(); }
+  function reset() { view.z = 1; clamp(); }
 
-  return { fit, render, pick, floorAt };
+  return { fit, render, pick, floorAt, zoomAt, panBy, reset, view };
 }

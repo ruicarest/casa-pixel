@@ -435,26 +435,66 @@ $('z-in').addEventListener('click', () => zoomAt(0.5, 0.5, 1.5));
 $('z-out').addEventListener('click', () => zoomAt(0.5, 0.5, 1 / 1.5));
 $('z-reset').addEventListener('click', () => { view.z = 1; clampView(); render(); });
 
-// ---------- 2.5D view: tap to select, and drag furniture in "Mover objetos" (same data as the top-down view) ----------
+// ---------- 2.5D view: same gestures as the top-down view, on the same data ----------
+// Tap selects; wheel, pinch or the buttons zoom; drag pans when zoomed; in "Mover objetos" drag moves furniture.
 {
-  const c3 = $('house3d');
-  let drag = null;
+  const c3 = $('house3d'), pts = new Map();
+  let g = null; // { type: 'tap' | 'pan' | 'drag' | 'pinch', ... }
+  const frac3 = ev => { const r = c3.getBoundingClientRect(); return [(ev.clientX - r.left) / r.width, (ev.clientY - r.top) / r.height]; };
+  const sync3 = () => {
+    $('z3-level').textContent = `${Math.round(iso.view.z * 100)}%`;
+    c3.style.touchAction = iso.view.z > 1 || editMode ? 'none' : 'pan-y';
+    render();
+  };
   c3.addEventListener('pointerdown', ev => {
-    const o = iso.pick(ev, editMode, plantsOf);
-    if (editMode && o) {
+    pts.set(ev.pointerId, ev);
+    c3.setPointerCapture(ev.pointerId);
+    if (pts.size === 2) {
+      const [a, b] = [...pts.values()];
+      g = { type: 'pinch', dist: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY) };
+      return;
+    }
+    const o = editMode ? iso.pick(ev, true, plantsOf) : null;
+    if (o) {
       const [fx, fy] = iso.floorAt(ev);
-      drag = { o, dx: fx - o.x, dy: fy - o.y, moved: false };
-      c3.setPointerCapture(ev.pointerId); select(o); refresh();
-    } else { select(o); refresh(); }
+      g = { type: 'drag', o, dx: fx - o.x, dy: fy - o.y, moved: false };
+      select(o); refresh();
+    } else g = { type: 'tap', sx: ev.clientX, sy: ev.clientY, last: frac3(ev) };
   });
   c3.addEventListener('pointermove', ev => {
-    if (!drag) return;
-    const [fx, fy] = iso.floorAt(ev);
-    drag.o.x = Math.round((fx - drag.dx) * T) / T; drag.o.y = Math.round((fy - drag.dy) * T) / T;
-    drag.moved = true; render();
+    if (!g || !pts.has(ev.pointerId)) return;
+    pts.set(ev.pointerId, ev);
+    if (g.type === 'pinch' && pts.size === 2) {
+      const [a, b] = [...pts.values()], dist = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+      const [fx, fy] = frac3({ clientX: (a.clientX + b.clientX) / 2, clientY: (a.clientY + b.clientY) / 2 });
+      iso.zoomAt(fx, fy, dist / g.dist); g.dist = dist; sync3();
+    } else if (g.type === 'drag') {
+      const [fx, fy] = iso.floorAt(ev);
+      g.o.x = Math.round((fx - g.dx) * T) / T; g.o.y = Math.round((fy - g.dy) * T) / T;
+      g.moved = true; render();
+    } else if (g.type === 'tap' || g.type === 'pan') {
+      if (g.type === 'tap' && Math.hypot(ev.clientX - g.sx, ev.clientY - g.sy) < 6) return;
+      g.type = 'pan';
+      const f = frac3(ev);
+      iso.panBy(f[0] - g.last[0], f[1] - g.last[1]); g.last = f; render();
+    }
   });
-  const end = () => { if (drag?.moved) { save(); refresh(); } drag = null; };
+  const end = ev => {
+    pts.delete(ev.pointerId);
+    if (!g) return;
+    if (g.type === 'tap' && ev.type === 'pointerup') { select(iso.pick(ev, false, plantsOf)); refresh(); }
+    if (g.type === 'drag' && g.moved) { save(); refresh(); }
+    if (g.type !== 'pinch' || pts.size < 2) g = null;
+  };
   c3.addEventListener('pointerup', end); c3.addEventListener('pointercancel', end);
+  c3.addEventListener('wheel', ev => {
+    if (iso.view.z === 1 && ev.deltaY > 0) return; // nothing to zoom out of: let the page scroll
+    ev.preventDefault();
+    iso.zoomAt(...frac3(ev), Math.exp(-ev.deltaY * (ev.ctrlKey ? .01 : .0015))); sync3();
+  }, { passive: false });
+  $('z3-in').addEventListener('click', () => { iso.zoomAt(.5, .5, 1.5); sync3(); });
+  $('z3-out').addEventListener('click', () => { iso.zoomAt(.5, .5, 1 / 1.5); sync3(); });
+  $('z3-reset').addEventListener('click', () => { iso.reset(); sync3(); });
 }
 
 // ---------- side panel ----------

@@ -325,13 +325,13 @@ export const SPRITES = {
     },
   },
   whiteboard: {
-    w: 20, h: 14, draw(c) {
+    stand: true, w: 20, h: 14, draw(c) {
       box(c, STEEL, 0, 0, 20, 14); r(c, WHITE, 2, 2, 16, 10);
       r(c, '#55506a', 3, 4, 12, 1); r(c, '#55506a', 3, 7, 9, 1); r(c, '#55506a', 3, 10, 13, 1);
     },
   },
   sign: {
-    w: 12, h: 12, draw(c) { box(c, '#f2d24a', 0, 0, 12, 12); r(c, RED, 3, 4, 6, 2); r(c, '#c9a830', 3, 8, 6, 1); },
+    stand: true, w: 12, h: 12, draw(c) { box(c, '#f2d24a', 0, 0, 12, 12); r(c, RED, 3, 4, 6, 2); r(c, '#c9a830', 3, 8, 6, 1); },
   },
   stool: {
     w: 10, h: 10, draw(c) { r(c, OUT, 1, 4, 1, 6); r(c, OUT, 8, 4, 1, 6); box(c, '#2f2a33', 0, 0, 10, 5); },
@@ -656,7 +656,7 @@ export const SPRITES = {
   },
   // --- sala (from photos): sofa wall is the back wall, TV wall is the cut-away front wall ---
   sofa_grey: { // dark grey corner sofa with the chaise on the right, throws and patterned cushions
-    w: 60, h: 40, draw(c) {
+    w: 60, h: 40, back: 10, draw(c) {
       const D = '#3f424c', M = '#565a66', Lt = '#6c717e';
       box(c, D, 0, 0, 60, 11);
       box(c, D, 0, 6, 6, 19); box(c, D, 54, 6, 6, 19);
@@ -953,6 +953,22 @@ export const SPRITES = {
       box(c, WHITE, .5, 1, 7, 5); r(c, OUT, 1, 0, 1.5, 1.5); r(c, OUT, 5.5, 0, 1.5, 1.5);
       r(c, WHITE, 1.5, .5, .5, .5); r(c, WHITE, 6, .5, .5, .5);
       r(c, GREY, 3, 1.5, 2, 1); r(c, OUT, 2.5, 3, .5, 1); r(c, OUT, 5, 3, .5, 1); r(c, '#f0a5b0', 3.75, 4.25, .5, .5);
+    },
+  },
+  vanity_side: { // white drawer unit against the left wall, seen from its end: mostly worktop, with an inset basin
+    w: 10, h: 26, front: 7, draw(c) {
+      box(c, KW, 0, 0, 10, 20); r(c, WHITE, 1, 1, 8, 18);
+      box(c, KS, 2, 5, 7, 10); r(c, '#f7f9fc', 3, 6, 5, 8); r(c, '#9aa0b0', 5, 9.5, 1, 1);
+      r(c, STEEL, 1, 9, 1.5, 2); r(c, '#8a8f9a', 2, 9.5, 1.5, 1);
+      r(c, '#5fa8d3', 2.5, 2, 1.5, 2); r(c, RED, 5, 1.5, 1.5, 2.5); r(c, GM, 6.5, 16, 1.5, 2);
+      box(c, KW, 0, 19, 10, 7); r(c, KS, 1, 22.5, 8, .5); r(c, '#9aa0b0', 4, 21, 2, .5); r(c, '#9aa0b0', 4, 24, 2, .5);
+    },
+  },
+  cabinet_black_side: { // tall black cabinet against the left wall by the balcony door, seen from its end
+    w: 9, h: 46, front: 26, draw(c) {
+      box(c, BLK, 0, 0, 9, 21); r(c, BLK2, 1, 1, 7, 18);
+      r(c, STEEL, 2, 3, 4, 5); r(c, WHITE, 2.5, 11, 4, 5); r(c, '#8a8f9a', 3, 12.5, 3, .5);
+      box(c, BLK, 0, 20, 9, 26); r(c, '#33303c', 1, 21.5, 7, 23); r(c, BLK2, 1, 21.5, 7, .5);
     },
   },
 };

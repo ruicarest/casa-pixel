@@ -50,6 +50,8 @@ canvas.editing { cursor: grab; }
 .members button { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px; background: var(--bg); box-shadow: none; text-align: left; }
 .members .chip { padding: 2px 8px; font-size: 18px; }
 #hint { margin-top: 8px; }
+.view-title { margin-top: 24px; }
+.view-title .muted { font-size: 20px; }
 .ambient { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: end; margin-top: 12px; }
 .ambient #weather { flex: 1 1 100%; color: var(--text); }
 .ambient label { flex: 0 1 150px; }

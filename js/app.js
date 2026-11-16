@@ -1,6 +1,7 @@
 import { T, S, SPRITES, spriteCanvas, drawMap, drawBubble, drawSelection } from './sprites.js';
 import { MAP, ROOMS, LAYOUT, defaultObjects, fmtDate } from './house.js';
 import { weather, refreshWeather, currentEnv } from './env.js';
+import { createIso } from './iso.js';
 import { getCode, setCode, takeCodeFromUrl, pull, push } from './sync.js';
 
 const KEY = `casa-pixel:v${LAYOUT}`;
@@ -14,6 +15,7 @@ bg.width = W * S; bg.height = H * S;
 const bgc = bg.getContext('2d');
 bgc.scale(S, S);
 const outdoor = drawMap(bgc, MAP); // tiles open to the sky (balcony + outside)
+const iso = createIso($('house3d'), bg); // the experimental 2.5D view of the same data
 
 // ---------- state ----------
 function load() {
@@ -137,6 +139,7 @@ function updateCat(t) {
   while (step > 0 && cat.path.length) {
     const [tx, ty] = cat.path[0], d = Math.hypot(tx - cat.x, ty - cat.y);
     if (Math.abs(tx - cat.x) > .01) cat.dir = tx > cat.x ? 1 : -1;
+    if (d > .01) cat.face = (tx - cat.x) - (ty - cat.y) >= 0 ? 1 : -1; // which way she faces in the 2.5D view
     if (d <= step) { cat.x = tx; cat.y = ty; cat.path.shift(); step -= d; }
     else { cat.x += (tx - cat.x) / d * step; cat.y += (ty - cat.y) / d * step; step = 0; }
   }
@@ -299,6 +302,7 @@ function render(t = performance.now()) {
     }
     if (o.id === sel.obj) drawSelection(ctx, x, y, s.w, s.h);
   }
+  iso.render({ t, env: e, objects, sel, cat, thirstyIn, plantsOf, bob });
 }
 
 // ---------- view: size, zoom, pan ----------
@@ -308,6 +312,7 @@ function fit() {
   const dpr = Math.min(window.devicePixelRatio || 1, 3);
   canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
   k = canvas.width / W;
+  iso.fit();
   render();
 }
 
@@ -429,6 +434,28 @@ canvas.addEventListener('wheel', e => {
 $('z-in').addEventListener('click', () => zoomAt(0.5, 0.5, 1.5));
 $('z-out').addEventListener('click', () => zoomAt(0.5, 0.5, 1 / 1.5));
 $('z-reset').addEventListener('click', () => { view.z = 1; clampView(); render(); });
+
+// ---------- 2.5D view: tap to select, and drag furniture in "Mover objetos" (same data as the top-down view) ----------
+{
+  const c3 = $('house3d');
+  let drag = null;
+  c3.addEventListener('pointerdown', ev => {
+    const o = iso.pick(ev, editMode, plantsOf);
+    if (editMode && o) {
+      const [fx, fy] = iso.floorAt(ev);
+      drag = { o, dx: fx - o.x, dy: fy - o.y, moved: false };
+      c3.setPointerCapture(ev.pointerId); select(o); refresh();
+    } else { select(o); refresh(); }
+  });
+  c3.addEventListener('pointermove', ev => {
+    if (!drag) return;
+    const [fx, fy] = iso.floorAt(ev);
+    drag.o.x = Math.round((fx - drag.dx) * T) / T; drag.o.y = Math.round((fy - drag.dy) * T) / T;
+    drag.moved = true; render();
+  });
+  const end = () => { if (drag?.moved) { save(); refresh(); } drag = null; };
+  c3.addEventListener('pointerup', end); c3.addEventListener('pointercancel', end);
+}
 
 // ---------- side panel ----------
 const esc = s => String(s ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));

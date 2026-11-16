@@ -9,7 +9,7 @@
 
 // Bump when MAP or defaultObjects() change: saved furniture positions are then replaced by the new defaults
 // (plants and their watering history are kept when the page is synced with the cloud).
-export const LAYOUT = 11;
+export const LAYOUT = 12;
 
 export const MAP = [
   '                             ',
@@ -27,9 +27,9 @@ export const MAP = [
   ' vv ppppppppp ggg pppppppppp ',
   ' vv ppppppppp ggg pp GGGGGGG ',
   ' vvpppppppppp LLL pp GGGGGGG ',
-  ' vvpppppppppp LLL pppppppppp ',
-  ' vv ppppppppp ggggpp ppppppp ',
+  ' vvpppppppppp LLLppppppppppp ',
   ' vv ppppppppp gggg   ppppppp ',
+  ' vv ppppppppp gggggg ppppppp ',
   ' vv ppppppppp gggggg ppppppp ',
   '                             ',
 ];
@@ -40,12 +40,12 @@ export const ROOMS = [
   { name: 'Cozinha', x: 3, y: 5, w: 8, h: 4 },
   { name: 'Despensa', x: 18, y: 4, w: 2, h: 2 },
   { name: 'Entrada', x: 11, y: 5, w: 7, h: 4 },
-  { name: 'Corredor', x: 17, y: 7, w: 3, h: 10 },
+  { name: 'Corredor', x: 17, y: 7, w: 3, h: 9 },
   { name: 'Varanda', x: 1, y: 11, w: 2, h: 8 },
   { name: 'Sala', x: 3, y: 11, w: 10, h: 8 },
   { name: 'Casa de banho de serviço', x: 14, y: 11, w: 3, h: 3 },
   { name: 'Casa de banho', x: 14, y: 16, w: 3, h: 3 },
-  { name: 'Casa de banho', x: 17, y: 17, w: 3, h: 2 }, // the recess under the end of the corridor, where the shower is
+  { name: 'Casa de banho', x: 17, y: 16, w: 3, h: 3 }, // the recess under the end of the corridor, where the shower is
   { name: 'Closet', x: 20, y: 3, w: 8, h: 4 },
   { name: 'Closet', x: 20, y: 7, w: 3, h: 1 }, // the nook by its door, which cuts a corner out of the escritório
   { name: 'Escritório', x: 20, y: 9, w: 8, h: 4 },
@@ -111,7 +111,7 @@ export function defaultObjects() {
     // the walk-in shower is in the recess at the bottom right (where the plan shows a bathtub)
     ['bath_tower', 14.05, 14.55], ['vanity_side', 14.03, 15.75],
     ['toilet', 14.15, 17.7], ['bin_steel', 15.3, 18.4], ['wicker_basket', 15.9, 18.2],
-    ['rug_navy', 16.8, 17.25], ['shower_glass', 17.9, 18],
+    ['rug_navy', 16.9, 17.6], ['shower_glass_v', 18.95, 17.2],
     // Closet — L-shaped: the door opens into a nook at the bottom-left; window on the right wall
     ['window_side', 28, 3.5],
     ['clothes_rack', 21, 1.4], ['dresser_white', 23.3, 1.3], ['dehumidifier', 24.8, 2.6], ['storage_box', 25.6, 2.9],
@@ -125,10 +125,10 @@ export function defaultObjects() {
     ['kallax_side', 27, 8.5], ['desk_side', 26.5, 11], ['office_chair', 25.5, 11.5],
     ['cabinet_dark', 24, 10.5],
     ['cat', 27.125, 9.5625], // asleep on its bed, on top of the low shelf
-    // Quarto — door top-left, window on the right wall
+    // Quarto — door top-left, built-in white wardrobe along the left wall below it, window on the right wall
     ['window_side', 28, 15.5],
     ['picture', 22.5, 13.5], ['heater', 21, 14.5], ['ladder', 26, 13.5], ['basket', 27, 14.5],
-    ['rug_grey', 21.5, 15.5], ['bed_sage', 23.5, 16],
+    ['wardrobe_side', 21.03, 15.37], ['rug_grey', 22.1, 15.6], ['bed_sage', 23.5, 16],
     ['nightstand', 22.5, 18], ['nightstand_lamp', 26, 18],
   ];
   return list.map(([type, x, y, extra], i) => ({

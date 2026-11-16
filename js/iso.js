@@ -183,7 +183,7 @@ export function createIso(canvas, bg) {
       };
     }
     // a box: top of the sprite on the lid, the rest on the front, a plain shaded side
-    const d = it.top / T, zf = it.front / T, y0 = yb - d, x1 = o.x + w;
+    const d = it.top / T, zf = s.z3 ?? it.front / T, y0 = yb - d, x1 = o.x + w; // `z3`: real height in tiles, when the 2D drawing is shorter
     return {
       key: o.x + w / 2 + y0 + d / 2,
       box: [px(o.x, yb), py(o.x, y0, zf), px(x1, y0) - px(o.x, yb), py(x1, yb) - py(o.x, y0, zf)],
@@ -196,7 +196,7 @@ export function createIso(canvas, bg) {
         ctx.save(); ctx.transform(1, .5, -1, .5, px(o.x, y0), py(o.x, y0, zf));
         ctx.drawImage(cv, 0, 0, s.w * S, it.top * S, 0, 0, s.w, it.top); ctx.restore();
         ctx.save(); ctx.transform(1, .5, 0, 1, px(o.x, yb), py(o.x, yb, zf));
-        ctx.drawImage(cv, 0, it.top * S, s.w * S, it.front * S, 0, 0, s.w, it.front); ctx.restore();
+        ctx.drawImage(cv, 0, it.top * S, s.w * S, it.front * S, 0, 0, s.w, zf * T); ctx.restore();
         if (s.back) { // sofas: the first `back` rows of the sprite are a backrest that rises above the seat
           const bd = s.back / T * .6, zb = zf + .6;
           quad(it.side, [x1, y0, zb], [x1, y0 + bd, zb], [x1, y0 + bd, 0], [x1, y0, 0]);

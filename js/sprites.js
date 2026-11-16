@@ -971,6 +971,22 @@ export const SPRITES = {
       box(c, BLK, 0, 20, 9, 26); r(c, '#33303c', 1, 21.5, 7, 23); r(c, BLK2, 1, 21.5, 7, .5);
     },
   },
+  wardrobe_side: { // built-in white wardrobe along the left wall, floor to ceiling, seen from its end
+    w: 10, h: 58, front: 18, z3: 2, draw(c) {
+      box(c, KW, 0, 0, 10, 41); r(c, WHITE, 1, 1, 8, 38);
+      for (const y of [10.5, 20.5, 30.5]) r(c, KS, 8.5, y, .5, 9);     // door gaps along the room side
+      for (const y of [10, 20, 30]) r(c, KS, 1, y, 8, .5);
+      box(c, KW, 0, 40, 10, 18); r(c, WHITE, 1, 41.5, 8, 15); r(c, KS, 1, 41.5, 8, .5);
+    },
+  },
+  shower_glass_v: { // the walk-in shower, long side running front to back
+    w: 16, h: 28, flat: true, draw(c) {
+      box(c, '#dfe6ec', 0, 0, 16, 28); r(c, WHITE, 1.5, 1.5, 13, 25);
+      for (let y = 4; y < 26; y += 3) r(c, '#e9eef2', 3, y, 10, .5);
+      r(c, STEEL, 7, 13, 2, 2); r(c, '#8a8f9a', 7.5, 13.5, 1, 1);
+      r(c, 'rgba(150,200,225,.6)', 0, 0, 16, 1.5); r(c, 'rgba(150,200,225,.6)', 0, 0, 1.5, 28);
+    },
+  },
 };
 
 export const S = 2; // real pixels per art unit: sprites can use half-unit detail
